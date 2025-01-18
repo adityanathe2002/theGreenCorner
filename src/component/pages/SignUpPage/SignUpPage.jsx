@@ -1,0 +1,222 @@
+import React, { useReducer, useState } from "react";
+import Img from "../../../assets/plant/Plant_Login_Image.jpg";
+import Logo from "../../../assets/plant/TheGreenCorner2.png";
+import { FaFacebook } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+
+const SignUpPage = () => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const initialState = {
+    username: "",
+    password: "",
+    email: "",
+    contact: "",
+    error: "",
+    success: "",
+  };
+
+  const formReducer = (state, action) => {
+    switch (action.type) {
+      case "SET_FIELD":
+        return { ...state, [action.field]: action.value };
+      case "SET_ERROR":
+        return { ...state, error: action.value, success: "" };
+      case "SET_SUCCESS":
+        return { ...state, success: action.value, error: "" };
+      default:
+        return state;
+    }
+  };
+
+  const [state, dispatch] = useReducer(formReducer, initialState);
+  const navigate = useNavigate();
+
+  const validateForm = () => {
+    if (!state.email || !/\S+@\S+\.\S+/.test(state.email)) {
+      dispatch({ type: "SET_ERROR", value: "Please enter a valid email." });
+      return false;
+    }
+    if (state.password.length < 6) {
+      dispatch({
+        type: "SET_ERROR",
+        value: "Password must be at least 6 characters long.",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const data = {
+      username: state.username,
+      password: state.password,
+      email: state.email,
+      contact: state.contact,
+    };
+
+    try {
+      const response = await axios.post(
+        "http://116.75.62.44:8000/adduser",
+        data,
+        { headers: { "Content-Type": "application/json" } }
+      );
+      console.log("Signup successful:", response.data);
+
+      dispatch({ type: "SET_SUCCESS", value: "Sign up successful!" });
+
+      setTimeout(() => {
+        navigate("/login"); // Redirect after showing success message
+      }, 2000); // Optional delay for user feedback
+    } catch (error) {
+      console.error("Signup error:", error);
+      dispatch({
+        type: "SET_ERROR",
+        value: "Signup failed! Please try again.",
+      });
+      navigate("/login");
+    }
+  };
+
+  const handleChange = (field, value) => {
+    dispatch({ type: "SET_FIELD", field, value });
+  };
+
+
+  return (
+    <div className="w-full h-screen flex flex-col lg:flex-row">
+      {/* Left Section */}
+      <div className="h-[70%] lg:h-full w-full lg:w-[45%] flex flex-col bg-white">
+        {/* Header */}
+        <div className="h-[8%] flex items-center  justify-start px-4">
+          <img src={Logo} alt="The Green Corner Logo" />
+        </div>
+        {/* Middle Section */}
+        <div className="h-[30%] flex flex-col items-center justify-center gap-2 px-4 lg:px-8">
+          <h1 className="text-lg lg:text-xl font-bold">Welcome to The Green Corner!</h1>
+          <p className="text-xs lg:text-sm text-gray-600">
+            Sign up for exclusive offers, plant care tips, and more!
+          </p>
+          <div className="mt-2 flex gap-4">
+            {/* Buttons for Google & Facebook */}
+            <button className="px-4 py-2 text-black bg-white flex items-center gap-2 rounded-md shadow-md hover:bg-gray-100">
+              <FcGoogle size={20} />
+              Google
+            </button>
+            <button className="px-4 py-2 text-black bg-white flex items-center gap-2 rounded-md shadow-md hover:bg-gray-100">
+              <FaFacebook className="text-blue-600" size={20} />
+              Facebook
+            </button>
+          </div>
+          <div className="w-full flex items-center gap-2">
+            <hr className="flex-grow border-t border-[#DBDBDB]" />
+            <span className="text-gray-500 text-sm font-medium">Or continue with</span>
+            <hr className="flex-grow border-t border-[#DBDBDB]" />
+          </div>
+        </div>
+        {/* Bottom Section */}
+        <div className="h-[55%] flex flex-col items-center justify-center gap-4 px-4 lg:px-8">
+          <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4">
+            <div className="w-[90%] lg:w-[70%]">
+              <input
+                type="text"
+                placeholder="Username"
+                name="username"
+                value={state.username}
+                onChange={(e) => handleChange("username", e.target.value)}
+                className="w-full h-8 px-4 rounded-md border"
+              />
+            </div>
+            <div className="relative w-[90%] lg:w-[70%]">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                name="password"
+                value={state.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                className="w-full h-8 px-4 rounded-md border"
+              />
+              {/* Eye Icon Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+              >
+                {showPassword ? <AiOutlineEye size={20} /> : <AiOutlineEyeInvisible size={20} />}
+              </button>
+            </div>
+            <div className="w-[90%] lg:w-[70%]">
+              <input
+                type="email"
+                placeholder="Email"
+                name="email"
+                value={state.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                className="w-full h-8 px-4 rounded-md border"
+              />
+            </div>
+            <div className="w-[90%] lg:w-[70%]">
+              <input
+                type="text"
+                placeholder="Contact"
+                name="contact"
+                value={state.contact}
+                onChange={(e) => handleChange("contact", e.target.value)}
+                className="w-full h-8 px-4 rounded-md border"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="agree"
+                className="w-3 h-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              />
+              <label htmlFor="agree" className="text-gray-700 text-xs">
+                I agree to the
+                <a href="#" className="text-blue-600 underline">
+                  T&C
+                </a>{" "}
+                and{" "}
+                <a href="#" className="text-blue-600 underline">
+                  Privacy Policy
+                </a>
+                .
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="w-[90%] lg:w-[70%] h-10 text-white bg-[#163020] rounded-md shadow-md hover:bg-[#163030]"
+            >
+              Create Account
+            </button>
+          </form>
+          <div className="flex gap-1 text-sm">
+            <p>Already have an account?</p>
+            <Link to='/login' className="text-green-700 ">Sign In</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Section */}
+      <div className="h-[30%] lg:h-full w-full lg:w-[55%]">
+        <img
+          src={Img}
+          alt="Login Plant"
+          className="object-cover h-full w-full"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default SignUpPage
+
+
+
