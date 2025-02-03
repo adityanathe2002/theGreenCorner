@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useReducer, useState } from "react";
 import Img from "../../../assets/plant/Plant_Login_Image.jpg";
 import Logo from "../../../assets/plant/TheGreenCorner2.png";
 import { FaFacebook } from "react-icons/fa";
@@ -6,9 +6,11 @@ import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { plantContext } from "../../Context/AppContext";
 
 const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
+const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
 
     const initialState = {
         email: "",
@@ -27,7 +29,7 @@ const LoginPage = () => {
             case "LOGIN_SUCCESS":
                 return { ...state, isLoggedIn: true, error: "" };
             case "LOGIN_FAILURE":
-                return { ...state, error: action.error }; // Display the custom error message
+                return { ...state, error: action.error }; 
             default:
                 return state;
         }
@@ -38,7 +40,8 @@ const LoginPage = () => {
 
     useEffect(() => {
         axios
-            .get("http://116.75.62.44:8000/auth")
+            // .get("http://116.75.62.44:8000/auth")
+            .get("http://localhost:5000/user")
             .then((response) => {
                 dispatch({ type: "SET_USERS", value: response.data });
             })
@@ -83,19 +86,22 @@ const LoginPage = () => {
         if (user) {
             dispatch({ type: "LOGIN_SUCCESS" });
             alert("Login successful!");
-            navigate("/");   ///url
+            setIsLoggedIn(true)
+            setUserDetails({ email, password }); 
+            navigate("/");  
         } else {
             dispatch({ type: "LOGIN_FAILURE", error: "Invalid username or password." });
         }
     };
 
+    
     return (
         <div className="w-full h-screen flex flex-col lg:flex-row">
             {/* Left Section */}
             <div className="h-[60%] lg:h-full w-full lg:w-[45%] flex flex-col bg-white">
                 {/* Header */}
                 <div className="h-[15%] w-[80%] ml-10 flex items-center justify-start">
-                    <img src={Logo} alt="The Green Corner Logo" />
+                    <Link to="/"><img src={Logo} alt="The Green Corner Logo" /></Link>
                 </div>
                 {/* Middle Section */}
                 <div className="h-[35%] flex flex-col items-center justify-center gap-3 px-4 lg:px-8">

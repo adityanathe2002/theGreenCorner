@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import HeroImg from "../../../assets/plant/Green Modern Gardening Presentation.png";
 import gsap from "gsap";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
 
@@ -15,7 +16,7 @@ const Hero = () => {
       }, [])
 
     return (
-        <div className="relative h-screen bg-gray-100 dark:bg-gray-950 dark:text-white duration-200 ">
+        <div className="relative h-[40vh] lg:h-screen bg-gray-100 dark:bg-gray-950 dark:text-white duration-200 ">
             {/* Background Image */}
             <img
                 src={HeroImg}
@@ -29,8 +30,8 @@ const Hero = () => {
             {/* Content */}
             <div  ref={textRef} className="relative z-10 w-[70%] flex flex-col justify-center h-full text-left px-8 lg:px-16">
                 {/* Heading */}
-                <div className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white">
-                    <h1 className="flex flex-wrap gap-2">
+                <div className="text-sm sm:text-4xl lg:text-5xl font-semibold text-white">
+                    <h1 className="flex flex-wrap lg:gap-2">
                         <p className="text-black">Nurture</p>
                         <p className="text-[#85D178]">Your Home</p>
                         <p className="text-black">with</p>
@@ -40,14 +41,14 @@ const Hero = () => {
                 </div>
 
                 {/* Description */}
-                <p className="mt-4 text-base sm:text-lg lg:text-xl text-black">
+                <p className="mt-4 text-sm sm:text-lg lg:text-xl text-black">
                     Explore a wide variety of plants, from indoor favorites to outdoor gems.
                 </p>
 
                 {/* Buttons */}
-                <div className="mt-6 flex flex-col sm:flex-row gap-4">
-                    <button className="px-6 py-3 bg-green-700 text-white rounded-md shadow-md hover:bg-green-800">
-                        Explore More
+                <div className="mt-6 flex flex-col sm:flex-row lg:gap-4">
+                    <button className=" lg:px-6 lg:py-3 bg-green-700 text-white rounded-md shadow-md hover:bg-green-800">
+                        <Link to='/navbar/allplant'>Explore More</Link>
                     </button>
                 </div>
             </div>

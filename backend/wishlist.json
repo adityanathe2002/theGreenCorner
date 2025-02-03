@@ -1,0 +1,38 @@
+{
+  "wishlist": [
+    {
+      "id": "37b1",
+      "plantId": "1",
+      "name": "Rose",
+      "price": 12,
+      "image": "https://nurserylive.com/cdn/shop/products/nurserylive-miniature-rose-button-rose-yellow-plant_600x600.jpg?v=1634224134",
+      "rating": 4.5
+    },
+    {
+      "id": "c8d4",
+      "plantId": "31",
+      "name": "Bougainvillea",
+      "price": 15,
+      "image": "https://nurserylive.com/cdn/shop/products/nurserylive-plants-bougainvillea-yellow-plant-16968652521612_600x600.jpg?v=1634214819",
+      "rating": 3.8
+    },
+    {
+      "id": "9012",
+      "plantId": "68",
+      "name": "Ficus Benjamina",
+      "price": 2500,
+      "image": "https://nurserylive.com/cdn/shop/products/nurserylive-g-ficus-starlight-ficus-benjamina-plant-419736_600x600.jpg?v=1679750037",
+      "rating": 4.4,
+      "discountPrice": 2399
+    },
+    {
+      "id": "5b2c",
+      "plantId": "96",
+      "name": "Canna Lily",
+      "price": 1200,
+      "image": "https://nurserylive.com/cdn/shop/products/nurserylive-g-canna-yellow-flower-with-green-leaves-plant-566111_600x600.jpg?v=1679749395",
+      "rating": 4.5,
+      "discountPrice": 1100
+    }
+  ]
+}

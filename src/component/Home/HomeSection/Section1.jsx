@@ -31,17 +31,17 @@ const Section1 = () => {
     return (
         <div className="bg-[#333] py-6">
             <div className="container mx-auto px-4">
-                <div className="flex flex-col md:flex-row justify-around items-center space-y-6 md:space-y-0">
+                <div className="flex md:flex-row justify-around items-center space-y-6 md:space-y-0">
                     {list.map((data) => (
                         <div
                             key={data.id}
                             className="flex flex-col md:flex-row items-center justify-center text-center md:text-left gap-4 w-full md:w-1/3"
                         >
-                            <img src={data.img} alt="" className="h-16 md:h-20" />
+                            <img src={data.img} alt="" className="h-14 md:h-16" />
                             <div className="text-white text-sm space-y-1">
-                                <p className="font-bold">{data.description1}</p>
-                                <p>{data.description2}</p>
-                                <p>{data.description3}</p>
+                                <p className="font-bold text-sm">{data.description1}</p>
+                                <p className='lg:text-sm'>{data.description2}</p>
+                                <p className='lg:text-sm'>{data.description3}</p>
                             </div>
                         </div>
                     ))}

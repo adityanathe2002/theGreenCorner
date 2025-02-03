@@ -6,6 +6,7 @@ export default {
   ],
   theme: {
     extend: {
+      darkMode: 'class', 
       colors: {
         lightGreen: "#E3ECE0", // Add your custom color
        
