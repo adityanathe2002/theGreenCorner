@@ -15,45 +15,10 @@
       "contact": "9876543211"
     },
     {
-      "id": "3e76",
+      "id": "7d7f",
       "username": "admin",
-      "password": "123567",
-      "email": "adi@gmail.com",
-      "contact": "987654321"
-    },
-    {
-      "id": "68b3",
-      "username": "admin",
-      "password": "123567",
-      "email": "adi@gmail.com",
-      "contact": "987654321"
-    },
-    {
-      "id": "aa20",
-      "username": "admin",
-      "password": "123567",
-      "email": "adi@gmail.com",
-      "contact": "987654321"
-    },
-    {
-      "id": "d445",
-      "username": "xyz",
-      "password": "1234567",
-      "email": "vaibhav@gmail.com",
-      "contact": "98vdfvd"
-    },
-    {
-      "id": "e5b1",
-      "username": "Aditya Nathe",
       "password": "123456",
-      "email": "adityanathe72@gmail.com",
-      "contact": "7665444789"
-    },
-    {
-      "id": "f414",
-      "username": "adi",
-      "password": "123456",
-      "email": "adi@gmail.com",
+      "email": "admin@gmail.com",
       "contact": "9876543210"
     }
   ]

@@ -1,10 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { FaFaceFlushed, FaLifeRing, FaLocationPin, FaStar, FaThumbsDown } from 'react-icons/fa6';
-import { useLocation } from 'react-router-dom';
-import water from '../../assets/InfoLogo/water.png';
-import logo2 from '../../assets/InfoLogo/logo2.png';
-import logo3 from '../../assets/InfoLogo/logo3.png';
-import logo4 from '../../assets/InfoLogo/logo4.png';
+import React, { useContext, useEffect, useState } from 'react';
+import { FaAngleRight, FaFaceFlushed, FaHeart, FaLifeRing, FaLocationPin, FaStar, FaThumbsDown } from 'react-icons/fa6';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import fullsun from '../../assets/lightmode/sunshine.gif';
 import sunset from '../../assets/lightmode/sunset.gif';
 import partial from '../../assets/lightmode/partial.png';
@@ -12,18 +8,24 @@ import leaf from '../../assets/lightmode/leaf2.jpeg';
 import leaf5 from '../../assets/lightmode/leaf5.jpeg';
 import { FaRegThumbsDown, FaRegThumbsUp } from 'react-icons/fa';
 import axios from 'axios';
-
+import { equipmentContext } from '../Context/EquipmentsContext';
+import toast from 'react-hot-toast';
 
 const PlantDesc = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { plant } = location.state; // Access the plant data from state
   const [openDropdown, setOpenDropdown] = useState(null); // Tracks which dropdown is open
-  const [selectedImage, setSelectedImage] = useState([0]);
-  const [likes, setLikes] = useState();
-  const [dislikes, setDisLikes] = useState()
+  const [selectedImage, setSelectedImage] = useState(plant.secondaryImages[0]);
+  const [likes, setLikes] = useState(0);
+  const [dislikes, setDisLikes] = useState(0);
+  const { equipments } = useContext(equipmentContext);
+  const allData = equipments.slice(80, 84);
 
-
-
+  const [wishlist, setWishlist] = useState(() => {
+    const storedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    return storedWishlist.map(item => item.id);
+  });
 
   const handleAction = (type) => {
     if (type === "likes") {
@@ -33,52 +35,95 @@ const PlantDesc = () => {
     }
   };
 
-
-
-
-
   const handleAddToCart = async (plant) => {
     try {
-        // Step 1: Fetch current cart items
-        const cartResponse = await axios.get('http://localhost:4343/cart');
-        const cartItems = cartResponse.data;
+      // Fetch the current cart data from the API
+      const cartResponse = await axios.get('http://localhost:5000/cart');
+      const cartItems = cartResponse.data;
 
-        // Step 2: Check if the plant is already in the cart
-        const existingPlant = cartItems.find(item => item.plantId === plant.id);
+      // Check if the plant is already in the cart
+      const existingPlant = cartItems.find(item => item.id === plant.id);
 
-        if (existingPlant) {
-            // If the plant is already in the cart, show an alert
-            alert(`${plant.name} is already in the cart!`);
+      if (existingPlant) {
+        // If the plant is already in the cart, show an alert
+        alert(`${plant.name} is already in the cart!`);
+      } else {
+        // If the plant is not in the cart, add it with quantity 1
+        const addResponse = await axios.post('http://localhost:5000/cart', {
+          ...plant,
+          quantity: 1, // Initialize the quantity to 1 when the plant is added to the cart
+        });
+
+        // Check if the plant was successfully added to the cart
+        if (addResponse.status === 200 || addResponse.status === 201) {
+          alert(`${plant.name} added to cart successfully!`);
         } else {
-            // If the plant is not in the cart, add it
-            const addResponse = await axios.post('http://localhost:4343/cart', {
-                plantId: plant.id,
-                name: plant.name,
-                price: plant.price,
-                image: plant.secondaryImages,
-                quantity: 1 // Default quantity as 1
-            });
-
-            if (addResponse.status === 200 || addResponse.status === 201) {
-                alert(`${plant.name} added to cart successfully!`);
-            } else {
-                alert(`Failed to add ${plant.name} to cart.`);
-            }
+          alert(`Failed to add ${plant.name} to cart.`);
         }
+      }
     } catch (error) {
-        console.error('Error managing cart:', error);
-        alert('Something went wrong. Please try again.');
+      console.error('Error managing cart:', error);
+      alert('Something went wrong. Please try again.');
     }
-};
+  };
 
-  
+  const toggleWishlist = async (equip) => {
+    try {
+      let updatedWishlist = [...wishlist];
+      const isWishlisted = wishlist.includes(equip.id);
 
+      if (isWishlisted) {
+        // Remove from wishlist
+        const response = await axios.delete(`http://localhost:5000/wishlist/${equip.id}`);
+        if (response.status === 200) {
+          updatedWishlist = updatedWishlist.filter((id) => id !== equip.id);
+          setWishlist(updatedWishlist);
+        } else {
+          alert("Failed to remove from wishlist. Please try again.");
+        }
+      } else {
+        // Check if item already exists in backend wishlist
+        const { data: existingWishlist } = await axios.get("http://localhost:5000/wishlist");
+
+        if (existingWishlist.some((item) => item.id === equip.id)) {
+          toast.info("This product is already in your wishlist!");
+          return;
+        }
+
+        // Add to wishlist
+        const response = await axios.post('http://localhost:5000/wishlist', {
+          ...equip,
+          quantity: 1, // Initialize the quantity to 1 when the plant is added to the cart
+          type: "equipment"
+        });
+
+        if (response.status === 200 || response.status === 201) {
+          updatedWishlist.push(equip.id);
+          setWishlist(updatedWishlist);
+        } else {
+          toast.error("Failed to add to wishlist. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error);
+      toast.error('Something went wrong. Please try again.');
+    }
+  };
 
   useEffect(() => {
-    if (plant.secondaryImages && plant.secondaryImages.length > 0) {
-      setSelectedImage(plant.secondaryImages[0]);
-    }
-  }, [plant.secondaryImages]);
+    const fetchWishlist = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/wishlist');
+        if (response.status === 200) {
+          setWishlist(response.data.map(item => item.id));
+        }
+      } catch (error) {
+        console.error('Error fetching wishlist:', error);
+      }
+    };
+
+    fetchWishlist();
+  }, []);
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -95,35 +140,32 @@ const PlantDesc = () => {
   const getSunlightIcon = (type) => {
     switch (type) {
       case "Full Sun":
-        return <img src={fullsun} alt="" style={{ borderRadius: "50%" }} />;
+        return <img src={fullsun} alt="Full Sun" style={{ borderRadius: "50%" }} />;
       case "Partial Shade":
-        return <img src={sunset} alt="" style={{ borderRadius: "40%" }} />;// Partial Shade icon
+        return <img src={sunset} alt="Partial Shade" style={{ borderRadius: "40%" }} />;
       case "Indirect Light":
-        return <img src={partial} alt="" style={{ borderRadius: "40%" }} />
+        return <img src={partial} alt="Indirect Light" style={{ borderRadius: "40%" }} />;
       case "Bright, Indirect Light":
-        return <img src="" alt="" />; // Indirect Light icon
+        return <img src="" alt="Bright, Indirect Light" />;
       default:
-        return <FaFaceFlushed className="text-gray-500 w-8 h-8" />; // Default icon
+        return <FaFaceFlushed className="text-gray-500 w-8 h-8" />;
     }
   };
 
   return (
     <div className="flex flex-col justify-center items-center p-5 gap-5 mt-0">
       {/* First Section */}
-      
-      <div className="w-full flex  flex-col lg:flex-row gap-5 justify-center items-center">
+      <div className="w-full flex flex-col lg:flex-row gap-5 justify-center items-center">
         {/* Thumbnail Section */}
         <div className="flex lg:flex-col gap-3">
-          {plant.secondaryImages.map((val, id) => {
-            return (
-              <div
-                key={id}
-                onMouseEnter={() => setSelectedImage(val)}
-                className="w-20 h-20 border mt-3 border-gray-300 rounded-md overflow-hidden cursor-pointer hover:border-blue-500">
-                <img src={val} alt="" className='object-cover ' />
-              </div>
-            )
-          })}
+          {plant.secondaryImages.map((val, id) => (
+            <div
+              key={id}
+              onMouseEnter={() => setSelectedImage(val)}
+              className="w-20 h-20 border mt-3 border-gray-300 rounded-md overflow-hidden cursor-pointer hover:border-blue-500">
+              <img src={val} alt={`Thumbnail ${id}`} className='object-cover' />
+            </div>
+          ))}
         </div>
 
         {/* Main Display Section */}
@@ -134,7 +176,6 @@ const PlantDesc = () => {
             className="w-[80%] h-auto lg:w-full lg:h-full object-contain"
           />
         </div>
-
 
         {/* Details Section */}
         <div className="w-full lg:w-[50%] h-auto lg:h-[70vh] border p-4 flex flex-col gap-3 bg-white rounded-lg">
@@ -209,26 +250,26 @@ const PlantDesc = () => {
                     </li>
                   ))}
                 </ul>
-                
+
                 <h1 className="font-bold text-lg mt-5">Stock</h1>
                 <h1 className=' flex gap-5'>
                   <p className=" font-semibold">Availability</p>
-                  <p c>{plant.availability}</p>
+                  <p>{plant.availability}</p>
                 </h1>
                 <h1 className='flex gap-5'>
                   <p className=" font-semibold">Quantity Available</p>
                   <p>{plant.quantityAvailable}</p>
                 </h1>
-               
+
               </div>
             </div>
 
             {/* Sales Details Section */}
-            <div   style={{ backgroundImage: `url(${leaf5})` }} className="w-[60%] h-auto p-4 border bg-cover flex flex-col gap-0 bg-[#F8F9F4] rounded-lg shadow-md">
+            <div style={{ backgroundImage: `url(${leaf5})` }} className="w-[60%] h-auto p-4 border bg-cover flex flex-col gap-0 bg-[#F8F9F4] rounded-lg shadow-md">
               <div className="w-full flex flex-col gap-2">
                 <h1 className="font-bold text-lg">Last Month Sales Details</h1>
                 <table className="w-full text-left border-collapse">
-                  <tbody >
+                  <tbody>
                     <tr className="border-b">
                       <td className="py-2 font-semibold">Total Sales LastMonth</td>
                       <td className="py-2">{plant.totalSalesLastMonth}</td>
@@ -242,8 +283,8 @@ const PlantDesc = () => {
                 <div className=' mt-2'>
                   <h3 className="font-bold text-lg">Shipping States</h3>
                   <ul>
-                    {plant.shippingStates.map((val, i) => (
-                      <li key={i}  className="text-gray-600 text-sm font-medium">{val}</li>
+                    {plant?.shippingStates?.map((val, i) => (
+                      <li key={i} className="text-gray-600 text-sm font-medium">{val}</li>
                     ))}
                   </ul>
                 </div>
@@ -266,20 +307,20 @@ const PlantDesc = () => {
         </div>
 
         {/* Dropdowns */}
-        <div  className=" w-full lg:w-[100%] flex flex-col gap-4 relative">
-          
-          <div  className="w-full max-w-2xl p-6  bg-white rounded-lg shadow-lg relative">
-          
+        <div className=" w-full lg:w-[100%] flex flex-col gap-4 relative">
+
+          <div className="w-full max-w-2xl p-6  bg-white rounded-lg shadow-lg relative">
+
             {/* Top-right icon */}
             <div className="absolute top-4 right-4 ">
               <div className='w-16 h-16 rounded-full'>
                 {getSunlightIcon(plant.sunlightRequirement)}
               </div>
             </div>
-            
+
             <h1 className="text-xl font-bold mb-4 text-green-700">Plant Details</h1>
             <table className="w-full text-left border-collapse">
-              
+
               <tbody>
                 <tr className="border-b">
                   <td className="py-3 font-semibold">Sunlight Requirement</td>
@@ -344,12 +385,12 @@ const PlantDesc = () => {
         </div>
       </div>
       {/* Reviews  */}
-      <div className="w-full p-4">
+      <div className="w-full p-4 h-80 overflow-auto">
         <h1 className="text-3xl text-center font-bold">Reviews</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 p-2 gap-4">
           {plant.reviews.map((val, i) => (
             <div
-              style={{ backgroundImage: `url(${leaf})` }}
+              style={{ backgroundImage: `url(${leaf5})` }}
               key={i}
               className="flex flex-col items-start gap-2 border rounded-lg p-3 bg-cover bg-center relative shadow-md"
             >
@@ -362,11 +403,11 @@ const PlantDesc = () => {
               <h1 className="text-gray-800 z-10 font-medium"><strong>DateTime</strong>: {val.dateTime}</h1>
 
               <div className="flex gap-4 z-10">
-                <button onClick={() => handleAction(setLikes(likes + 1))} className="flex gap-2 text-gray-600 hover:text-blue-600">
-                  <FaRegThumbsUp className="mt-1" /> {val.likes}
+                <button onClick={() => handleAction("likes")} className="flex gap-2 text-gray-600 hover:text-blue-600">
+                  <FaRegThumbsUp className="mt-1" /> {likes}
                 </button>
-                <button onClick={() => handleAction(setDisLikes(dislikes + 1))} className="flex gap-2 text-gray-600 hover:text-red-600">
-                  <FaRegThumbsDown className="mt-1" />{val.dislikes}
+                <button onClick={() => handleAction("dislikes")} className="flex gap-2 text-gray-600 hover:text-red-600">
+                  <FaRegThumbsDown className="mt-1" />{dislikes}
                 </button>
               </div>
             </div>
@@ -374,9 +415,61 @@ const PlantDesc = () => {
         </div>
       </div>
 
+      {/* Equipments */}
+
+      <div className="p-4 m-4">
+        <h1 className="text-2xl font-bold mb-6 text-start">Garden Decor & Accessories</h1>
+        <div className="grid gap-6 h-auto md:grid-cols-2  lg:grid-cols-4 justify-items-center" >
+          {allData.map((equip, index) => (
+            <div
+              key={index}
+              className="relative p-2 w-full max-w-sm border h-[70vh] flex flex-col items-start rounded-lg shadow-lg bg-white"
+            >
+              {/* Sale Badge */}
+              <div className="absolute top-5 left-3 bg-yellow-300 text-black text-xs font-semibold px-2 py-1 rounded">
+                Sale!
+              </div>
+
+              {/* Wishlist Icon */}
+              <div
+                onClick={() => toggleWishlist(equip)}
+                className="absolute top-5 right-5 cursor-pointer"
+              >
+                <FaHeart
+                  size={20}
+                  className={`${wishlist.includes(equip.id) ? "text-red-500" : "text-gray-400"
+                    } transition-colors duration-200`}
+                />
+              </div>
+
+              <img
+                src={equip.primaryImage}
+                alt={equip.name}
+                onClick={() => navigate('/equipment-desc', { state: { equip: equip } })}
+                className="w-full h-[60%] rounded-lg shadow-lg object-cover cursor-pointer"
+              />
+              <h2 className="text-lg font-semibold mt-4">{equip.name}</h2>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-gray-500 line-through">₹{equip.price}</p>
+                <p className="text-green-600 font-bold">₹{equip.price}</p>
+              </div>
+              <div className="flex gap-3 items-center justify-between mt-1 w-full">
+                <button className="px-2 py-1 bg-[#163020] text-white text-sm font-semibold rounded-md">
+                  View More
+                </button>
+                <div className="text-2xl">{renderStars(equip.rating)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex w-full h-[10vh] mt-10 mb-3 items-center justify-center">
+          <button className="flex h-[70%] items-center justify-center text-xl px-6 py-2 bg-[#163020] text-white rounded-md gap-1"> <Link to='/equipments'>Explore more </Link> <FaAngleRight className="mt-1" /> </button>
+        </div>
+      </div>
+
+
     </div>
   );
 };
 
 export default PlantDesc;
-

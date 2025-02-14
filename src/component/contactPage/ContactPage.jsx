@@ -23,7 +23,7 @@ const ContactPage = () => {
 
     if (formData.name && formData.email && formData.message) {
       try {
-        const response = await axios.post('http://localhost:5353/contactus', formData);
+        const response = await axios.post('http://localhost:5000/contactus', formData);
         if (response.status === 200) {
           setFormStatus('Thank you for reaching out! We will get back to you soon.');
           setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form after submission

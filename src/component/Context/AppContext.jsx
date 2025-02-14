@@ -4,23 +4,28 @@ import React, { createContext, useEffect, useState } from 'react';
 export let plantContext = createContext();
 
 const AppContext = ({ children }) => {
+    const [isAdminLogin , setIsAdminLogin] = useState(false);
     const [allPlant, setAllPlant] = useState([]);
     const [filteredPlant, setFilteredPlant] = useState([]);
     const [search, setSearch] = useState("");
     const [categories, setCategories] = useState(""); // Should hold a single category string
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // login details
     const [sortPrice, setSortPrice] = useState("");
     const [ratings, setRatings] = useState("");
     const [totalItems, setTotalItems] = useState(null);
-     const [cartItems, setCartItems] = useState([]);
+    const [cartItems, setCartItems] = useState([]);
     const[cartTotalItems, setCartTotalItems] = useState('')
-    const [userDetails, setUserDetails] = useState({
-        email: "",
-        password: "",
-    });
+    const [userDetails, setUserDetails] = useState("");
+    const [admin , setAdmin] = useState([])
+
+    useEffect(()=>{
+        axios.get("http://localhost:5000/admin").then((resp)=>{
+            setAdmin(resp.data)
+        }).catch((error)=>{console.log(error)})
+    },[])
 
     useEffect(() => {
-        axios.get("http://localhost:8000/plants")
+        axios.get("http://localhost:5000/plants")
             // axios.get('http://116.75.62.44/8000/plants')
             .then((resp) => {
                 setAllPlant(resp.data);
@@ -30,9 +35,8 @@ const AppContext = ({ children }) => {
                 console.error("Error fetching plant data:", error);
             });
     }, []);
-
     useEffect(()=>{
-        axios.get("http://localhost:4343/cart").then((resp)=>{
+        axios.get("http://localhost:5000/cart").then((resp)=>{
             setCartTotalItems(resp.data)
         })
         .catch((error) => console.error("Error fetching cart data:", error));
@@ -74,6 +78,7 @@ const AppContext = ({ children }) => {
         setFilteredPlant(filteredItems);
     }, [search, categories, allPlant, sortPrice, ratings]);
 
+
     return (
         <plantContext.Provider value={{
             allPlant,
@@ -96,7 +101,8 @@ const AppContext = ({ children }) => {
             setUserDetails,
             totalCartItems,
             cartItems,
-            setCartItems
+            setCartItems,
+            admin
         }}>
             {children}
         </plantContext.Provider>

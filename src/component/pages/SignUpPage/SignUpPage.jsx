@@ -9,12 +9,15 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  
+  const [showPasswordTip, setShowPasswordTip] = useState(false);
+
+
   const initialState = {
     username: "",
     password: "",
     email: "",
     contact: "",
+    isChecked: false,
     error: "",
     success: "",
   };
@@ -27,6 +30,8 @@ const SignUpPage = () => {
         return { ...state, error: action.value, success: "" };
       case "SET_SUCCESS":
         return { ...state, success: action.value, error: "" };
+      case "TOGGLE_CHECKBOX":
+        return { ...state, isChecked: !state.isChecked };
       default:
         return state;
     }
@@ -34,8 +39,29 @@ const SignUpPage = () => {
 
   const [state, dispatch] = useReducer(formReducer, initialState);
   const navigate = useNavigate();
+  const [passwordMessage, setPasswordMessage] = useState("Password must be at least 6 characters long.");
+  const handlePasswordChange = (value) => {
+    handleChange("password", value);
+
+    if (value.length < 6) {
+      setPasswordMessage("Password must be at least 6 characters long.");
+      setShowPasswordTip(true);
+    } else {
+      setPasswordMessage("✅ Password looks good!");
+      setShowPasswordTip(true);
+
+      // Hide the message after 2 seconds if the condition is met
+      setTimeout(() => setShowPasswordTip(false), 2000);
+    }
+  };
+
 
   const validateForm = () => {
+    if (!state.username || !state.email || !state.password || !state.contact) {
+      dispatch({ type: "SET_ERROR", value: "All fields are required" });
+      return false;
+    }
+
     if (!state.username || state.username.length < 3) {
       dispatch({ type: "SET_ERROR", value: "Username must be at least 3 characters long." });
       return false;
@@ -56,37 +82,42 @@ const SignUpPage = () => {
       return false;
     }
 
+    if (!state.isChecked) {
+      dispatch({ type: "SET_ERROR", value: "You must agree to the Terms & Conditions." });
+      return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-  
+
     const data = {
       username: state.username,
       password: state.password,
       email: state.email,
       contact: state.contact,
     };
-  
+
     try {
-      // Step 1: Check if the user already exists
-      const existingUser = await axios.get(`http://localhost:5000/user?email=${state.email}`);
-      
+      // Check if the user already exists
+      const existingUser = await axios.get(`http://localhost:5000/user?email=${state.email || state.username ||state.contact}`);
+
       if (existingUser.data.length > 0) {
         dispatch({ type: "SET_ERROR", value: "User with this email already exists!" });
         return;
       }
-  
-      // Step 2: Proceed with registration if user does not exist
+
+      // Proceed with registration if user does not exist
       const response = await axios.post("http://localhost:5000/user", data, {
         headers: { "Content-Type": "application/json" }
       });
-  
-      console.log("Signup successful:", response.data);
+
       dispatch({ type: "SET_SUCCESS", value: "Sign up successful!" });
-  
+      alert("Sign Up successfully")
+
       setTimeout(() => {
         navigate("/login");
       }, 2000);
@@ -98,7 +129,6 @@ const SignUpPage = () => {
       });
     }
   };
-  
 
   const handleChange = (field, value) => {
     dispatch({ type: "SET_FIELD", field, value });
@@ -149,7 +179,9 @@ const SignUpPage = () => {
                 placeholder="Password"
                 name="password"
                 value={state.password}
-                onChange={(e) => handleChange("password", e.target.value)}
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                onFocus={() => setShowPasswordTip(true)} // Show tooltip on focus
+                onBlur={() => setShowPasswordTip(false)} // Hide tooltip on blur
                 className="w-full h-8 px-4 rounded-md border"
               />
               <button
@@ -159,7 +191,13 @@ const SignUpPage = () => {
               >
                 {showPassword ? <AiOutlineEye size={20} /> : <AiOutlineEyeInvisible size={20} />}
               </button>
+              {showPasswordTip && (
+                <div className="absolute top-10 left-0 bg-gray-700 text-white text-xs px-2 py-1 rounded-md">
+                  {passwordMessage}
+                </div>
+              )}
             </div>
+
 
             <div className="w-[90%] lg:w-[70%]">
               <input
@@ -187,9 +225,14 @@ const SignUpPage = () => {
                 className="w-full h-8 px-4 rounded-md border"
               />
             </div>
-
+            
             <div className="flex items-center gap-2">
-              <input type="checkbox" id="agree" className="w-3 h-3 text-green-600" />
+              <input
+                type="checkbox"
+                id="agree"
+                checked={state.isChecked}
+                onChange={() => dispatch({ type: "TOGGLE_CHECKBOX" })}
+                className="w-3 h-3 text-green-600" />
               <label htmlFor="agree" className="text-gray-700 text-xs">
                 I agree to the <a href="#" className="text-blue-600 underline">T&C</a> and <a href="#" className="text-blue-600 underline">Privacy Policy</a>.
               </label>
@@ -213,5 +256,4 @@ const SignUpPage = () => {
     </div>
   );
 };
-
 export default SignUpPage;

@@ -7,16 +7,21 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { plantContext } from "../../Context/AppContext";
+import { authContext } from "../../Context/AuthContext";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
-const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
+    const { isLoggedIn, setIsLoggedIn, setUserDetails, admin } = useContext(plantContext)
+    const {checkUser, setCheckUser,auth, setAuth} = useContext(authContext)
 
+    
     const initialState = {
         email: "",
         password: "",
         users: [],
         isLoggedIn: false,
+        isAdmin: false,
         error: "",
     };
 
@@ -29,7 +34,9 @@ const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
             case "LOGIN_SUCCESS":
                 return { ...state, isLoggedIn: true, error: "" };
             case "LOGIN_FAILURE":
-                return { ...state, error: action.error }; 
+                return { ...state, error: action.error };
+            case "isAdmin":
+                return{...state, isAdmin: action.value}    
             default:
                 return state;
         }
@@ -37,7 +44,6 @@ const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
 
     const [state, dispatch] = useReducer(reducer, initialState);
     const navigate = useNavigate();
-
     useEffect(() => {
         axios
             // .get("http://116.75.62.44:8000/auth")
@@ -83,18 +89,27 @@ const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
             (u) => u.email === email && u.password === password
         );
 
+        // Find the admin
+         const adminUser =  admin.find((a) => a.email === email && a.password === password);
         if (user) {
             dispatch({ type: "LOGIN_SUCCESS" });
-            alert("Login successful!");
+            toast.success("Login successful!",{duration: 2000});
             setIsLoggedIn(true)
-            setUserDetails({ email, password }); 
-            navigate("/");  
+            setUserDetails({ email, password, user });
+            navigate("/");
+        } 
+        else if (adminUser) {
+            dispatch({ type: "LOGIN_SUCCESS" });
+            dispatch({ type: "isAdmin", value: true }); // Set isAdmin to true
+            toast.success("Admin login successful!", { duration: 2000 });
+            setIsLoggedIn(true);
+            setUserDetails({ email, password, adminUser });
+            navigate("/admin-dash"); // Navigate to admin dashboard
         } else {
             dispatch({ type: "LOGIN_FAILURE", error: "Invalid username or password." });
         }
     };
 
-    
     return (
         <div className="w-full h-screen flex flex-col lg:flex-row">
             {/* Left Section */}
@@ -130,7 +145,7 @@ const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
                     <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4">
                         {/* Display error message */}
                         {state.error && <p className="text-red-500 text-sm">{state.error}</p>}
-                        
+
                         <div className="w-[90%] lg:w-[70%]">
                             <input
                                 type="email"
@@ -162,7 +177,21 @@ const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
                             </button>
                         </div>
                         <div className="w-[70%] flex items-center justify-evenly gap-2">
+                            {/* Are You Admin */}
                             <div className="flex gap-1 items-center">
+                                <input
+                                    type="checkbox"
+                                    id="admin"
+                                    checked={state.isAdmin}
+                                    onChange={(e)=>{dispatch({ type: "isAdmin", value: e.target.checked})}}
+                                    className="w-3 h-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                />
+                                <label htmlFor="agree" className="text-gray-700 text-xs">
+                                    Are You Admin
+                                </label>
+                            </div>
+                            {/* Remember */}
+                            {/* <div className="flex gap-1 items-center">
                                 <input
                                     type="checkbox"
                                     id="agree"
@@ -171,7 +200,8 @@ const {isLoggedIn, setIsLoggedIn,setUserDetails} = useContext(plantContext)
                                 <label htmlFor="agree" className="text-gray-700 text-xs">
                                     Remember
                                 </label>
-                            </div>
+                            </div> */}
+                            
                             <div>
                                 <p className="text-red-500 text-xs"><Link>Forgot Password?</Link></p>
                             </div>

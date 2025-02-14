@@ -6,19 +6,22 @@ import { FaCaretDown, FaCartShopping, FaHeart, FaUser, FaBars } from 'react-icon
 import DarkMode from './DarkMode';
 import gsap from 'gsap';
 import { plantContext } from '../../Context/AppContext';
-import { MdLogout } from 'react-icons/md';
+import { MdLogout, MdPerson } from 'react-icons/md';
+import { FaChevronDown } from 'react-icons/fa';
 
 const menu = [
     { id: 1, name: 'Home', link: "/" },
     { id: 2, name: 'Shop', link: "/navbar/allplant" },
-    { id: 3, name: 'Contact Us', link: "/contactpage" },
-    { id: 4, name: 'About', link: "/aboutpage" },
+    { id: 3, name: 'Equipment', link: "/equipments" },
+    { id: 4, name: 'Contact Us', link: "/contactpage" },
+    { id: 5, name: 'About', link: "/aboutpage" },
 ];
 
 const Navbar = () => {
     const textRef = useRef(null);
-    const { totalCartItems ,isLoggedIn, setIsLoggedIn, setUserDetails } = useContext(plantContext);
-    const [menuOpen, setMenuOpen] = useState(true); // To control mobile menu visibility
+    const { totalCartItems ,isLoggedIn, setIsLoggedIn,userDetails, setUserDetails } = useContext(plantContext);
+    const [menuOpen, setMenuOpen] = useState(false); // To control mobile menu visibility
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         gsap.fromTo(
@@ -36,9 +39,21 @@ const Navbar = () => {
     const handleLogout = () => {
         setIsLoggedIn(false);
         setUserDetails({ email: "", password: "" });
-        navigate('/login');  // Redirect to login page
+        navigate('/');  // Redirect to login page
     };
 
+    let closeTimeout;
+    const handleMouseEnter = () => {
+      clearTimeout(closeTimeout); // Prevent closing when re-entering
+      setIsOpen(true);
+    };
+  
+    const handleMouseLeave = () => {
+      closeTimeout = setTimeout(() => {
+        setIsOpen(false);
+      }, 200); // 500ms delay before closing
+    }
+   
     return (
         <div className="shadow-md bg-white dark:bg-white dark:text-black duration-200 relative z-40">
             {/* upper Navbar */}
@@ -70,26 +85,72 @@ const Navbar = () => {
                     </div>
                     <div className='flex gap-3'>
                         <div className="flex justify-between items-center h-[100%] gap-4">
-                            {/* Wishlist */}
+                            
+                            {/* After Login option */}
+                            <>
+                            <h1 className='hidden md:block text-white font-medium'>
+                                    Hello, 
+                                    {isLoggedIn ? userDetails.user.username.split(" ")[0] : "user" }
+                                </h1>
+
+                                    </>
                             {isLoggedIn ? (
                                 <>
+                                    <div 
+                                onMouseEnter={handleMouseEnter}
+                                onMouseLeave={handleMouseLeave}
+                                className="relative"
+                            >
+                                {/* Button to toggle dropdown */}
+                                <button
+                                
+                                    className="flex items-center bg-white text-black px-2 py-1 rounded-lg transition"
+                                >
+                                    Account <FaChevronDown className="ml-2" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {isOpen && (
+                                    <div className="absolute mt-2 w-36 bg-white shadow-lg rounded-lg overflow-hidden">
+                                        <ul className="text-gray-700">
+                                            <Link to="/userData">
+                                                <li className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                                <MdPerson className="text-blue-600" size={20} />
+                                                My Profile
+                                                </li>
+                                            </Link>
+
+                                        
+                                            <li onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600">
+                                            <MdLogout size={20} />
+                                            Logout
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                                  
                                     {/* Wishlist */}
                                     <Link to="/wishlist">
                                         <FaHeart size={22}  className="text-xl text-[#fff] drop-shadow-sm cursor-pointer hover:text-red-700" />
                                     </Link>
 
                                     {/* Cart */}
-                                    <Link to="/cart" >
-                                    {totalCartItems > 0 && <span className="absolute bg-yellow-400 top-4 px-1 text-xs  rounded-full">{totalCartItems}</span>} 
+                                   
+                                   <Link to="/cart" >
+                                    {totalCartItems > 0 && <span className="absolute bg-yellow-400 lg:top-4 sm:top-2 top-2 px-1 text-xs  rounded-full">{totalCartItems}</span>} 
                                     
                                         <FaCartShopping size={22} className="text-xl text-[#fff] drop-shadow-sm cursor-pointer"  />
                                     </Link>
-                                   
+                                 
+                                 {/* Account */}
+                               
+                                    
 
                                     {/* Logout Button */}
-                                    <button onClick={handleLogout} className="px-3 py-1 text-white rounded-md  ">
+                                    {/* <button onClick={handleLogout} className="px-3 py-1 text-white rounded-md  ">
                                         <MdLogout  size={22}/>
-                                    </button>
+                                    </button> */}
                                 </>
                             ) : (
                                 /* If user is NOT logged in, show only Login button */
@@ -120,7 +181,7 @@ const Navbar = () => {
                                     return checkIsActive;
                                 }}
                                 to={data.link}
-                                onClick={() => setMenuOpen(false)} // Close menu on item click
+                                onClick={() => setMenuOpen(true)} // Close menu on item click
                             >
                                 {data.name}
                             </NavLink>

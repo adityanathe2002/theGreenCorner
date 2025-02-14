@@ -5,15 +5,23 @@ import { Link } from "react-router-dom";
 
 const Hero = () => {
 
-    const textRef = useRef(null); 
+    const textRef = useRef(null);
     useEffect(() => {
         // Animate the text to move from bottom to top
         gsap.fromTo(
-            textRef.current, 
-          { y: 100, opacity: 0 }, // Start position (50px down, invisible)
-          { y: 0, opacity: 1, duration: 3, ease: "power3.out" } // End position (default position, fully visible)
+            textRef.current,
+            { y: 100, opacity: 0 }, // Start position (50px down, invisible)
+            {
+                y: 0, opacity: 1, duration: 3, ease: "power3.out",
+                scrollTrigger: {
+                    trigger: textRef.current,
+                    start: "top 90%",
+                    toggleActions: "restart none none none",
+                },
+
+            } // End position (default position, fully visible)
         );
-      }, [])
+    }, [])
 
     return (
         <div className="relative h-[40vh] lg:h-screen bg-gray-100 dark:bg-gray-950 dark:text-white duration-200 ">
@@ -28,7 +36,7 @@ const Hero = () => {
             <div className="absolute"></div>
 
             {/* Content */}
-            <div  ref={textRef} className="relative z-10 w-[70%] flex flex-col justify-center h-full text-left px-8 lg:px-16">
+            <div ref={textRef} className="relative z-10 w-[70%] flex flex-col justify-center h-full text-left px-8 lg:px-16">
                 {/* Heading */}
                 <div className="text-sm sm:text-4xl lg:text-5xl font-semibold text-white">
                     <h1 className="flex flex-wrap lg:gap-2">

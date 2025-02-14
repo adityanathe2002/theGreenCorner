@@ -1,47 +1,81 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { FaAngleRight, FaArrowRight, FaHeart } from "react-icons/fa"; // Import heart icon from react-icons
 import Img1 from "../../../assets/plant/modern indoor plant.png";
 import Img2 from "../../../assets/plant/aloe-vera.png";
 import Img3 from "../../../assets/plant/Low Light Plants.jpg";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { plantContext } from "../../Context/AppContext";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
+gsap.registerPlugin(ScrollTrigger);
 
 const Section4 = () => {
   const [wishlist, setWishlist] = useState([false, false, false]); // Tracks wishlist status for each plant
+  const navigate = useNavigate();
+  const { allPlant } = useContext(plantContext);
+  const plantData = allPlant.slice(97, 100)
 
-  const plants = [
-    {
-      img: Img1,
-      plantName: "Fiddle Leaf Fig",
-      plantPrice: 1500,
-      discountPrice: 1200,
-      rating: 4.5,
-    },
-    {
-      img: Img2,
-      plantName: "Alocasia Polly Plant",
-      plantPrice: 800,
-      discountPrice: 650,
-      rating: 4.5,
-    },
-    {
-      img: Img3,
-      plantName: "Low Light Plant",
-      plantPrice: 1000,
-      discountPrice: 850,
-      rating: 4.0,
-    },
-  ];
 
-//   const [plant, setPlant] = useState([])
+  // Add to cart
+  const handleAddToCart = async (plant) => {
+    try {
+      // Fetch the current cart data from the API
+      const cartResponse = await axios.get('http://localhost:5000/cart');
+      const cartItems = cartResponse.data;
 
-//   useEffect(()=>{
-//     axios.get("http://116.75.62.44:8000/plants").then((resp) => {
-//             setPlant(resp.data)
-//             console.log(plant)
-//           })
-//   },[])
-// console.log(plant);
+      // Check if the plant is already in the cart
+      const existingPlant = cartItems.find(item => item.id === plant.id);
+
+      if (existingPlant) {
+        // If the plant is already in the cart, show an alert
+        alert(`${plant.name} is already in the cart!`);
+      } else {
+        // If the plant is not in the cart, add it with quantity 1
+        const addResponse = await axios.post('http://localhost:5000/cart', {
+          id: plant.id,
+          name: plant.name,
+          price: plant.price,
+          discountPrice: plant.discountPrice,
+          quantity: 1, // Initialize the quantity to 1 when the plant is added to the cart
+          rating: plant.rating,
+          reviews: plant.reviews,
+          totalSalesLastMonth: plant.totalSalesLastMonth,
+          sellerName: plant.sellerName,
+          availability: plant.availability,
+          quantityAvailable: plant.quantityAvailable,
+          categories: plant.categories,
+          sunlightRequirement: plant.sunlightRequirement,
+          moistureRequirement: plant.moistureRequirement,
+          soilType: plant.soilType,
+          season: plant.season,
+          growthRate: plant.growthRate,
+          potSizeRequired: plant.potSizeRequired,
+          genus: plant.genus,
+          localName: plant.localName,
+          regionalName: plant.regionalName,
+          biologicalName: plant.biologicalName,
+          botanicalName: plant.botanicalName,
+          tags: plant.tags,
+          shippingStates: plant.shippingStates,
+          primaryImage: plant.primaryImage,
+          secondaryImages: plant.secondaryImages,
+          shoppingPolicy: plant.shoppingPolicy,
+          refundPolicy: plant.refundPolicy
+        });
+
+        // Check if the plant was successfully added to the cart
+        if (addResponse.status === 200 || addResponse.status === 201) {
+          alert(`${plant.name} added to cart successfully!`);
+        } else {
+          alert(`Failed to add ${plant.name} to cart.`);
+        }
+      }
+    } catch (error) {
+      console.error('Error managing cart:', error);
+      alert('Something went wrong. Please try again.');
+    }
+  };
 
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating); // Full stars
@@ -67,14 +101,37 @@ const Section4 = () => {
     setWishlist(updatedWishlist);
   };
 
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const elements = sectionRef.current.children;
+
+    gsap.fromTo(
+      elements,
+      { opacity: 0, y: 100 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1.3,
+        stagger: 0.3,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: sectionRef.current, // Corrected trigger
+          start: "top 85%", // Adjusted trigger point
+          toggleActions: "restart none none none", // Prevent repeated animations
+        },
+      }
+    );
+  });
+
   return (
     <div className="p-4 m-4">
       <h1 className="text-2xl font-bold mb-6 text-start">Recently Added</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-center">
-        {plants.map((plant, index) => (
+      <div className="grid gap-6 h-auto md:grid-cols-2  lg:grid-cols-3 justify-items-center" ref={sectionRef}>
+        {plantData.map((plant, index) => (
           <div
             key={index}
-            className="relative p-2 w-full max-w-sm border flex flex-col items-start rounded-lg shadow-lg bg-white"
+            className="relative p-2 w-full max-w-sm border h-[90vh] flex flex-col items-start rounded-lg shadow-lg bg-white"
           >
             {/* Sale Badge */}
             <div className="absolute top-5 left-3 bg-yellow-300 text-black text-xs font-semibold px-2 py-1 rounded">
@@ -88,24 +145,26 @@ const Section4 = () => {
             >
               <FaHeart
                 size={20}
-                className={`${
-                  wishlist[index] ? "text-red-500" : "text-gray-400"
-                } transition-colors duration-200`}
+                className={`${wishlist[index] ? "text-red-500" : "text-gray-400"
+                  } transition-colors duration-200`}
               />
             </div>
 
             <img
-              src={plant.img}
-              alt={plant.plantName}
-              className="w-full h-[70%] rounded-lg shadow-lg object-cover"
+              src={plant.primaryImage}
+              alt={plant.name}
+              onClick={() => navigate('/plant-desc', { state: { plant: plant } })}
+              className="w-full h-[80%] rounded-lg shadow-lg object-cover cursor-pointer"
             />
-            <h2 className="text-lg font-semibold mt-4">{plant.plantName}</h2>
+            <h2 className="text-lg font-semibold mt-4">{plant.name}</h2>
             <div className="flex items-center gap-2 mt-2">
-              <p className="text-gray-500 line-through">₹{plant.plantPrice}</p>
-              <p className="text-green-600 font-bold">₹{plant.discountPrice}</p>
+              <p className="text-gray-500 line-through">₹{plant.price}</p>
+              <p className="text-green-600 font-bold">₹{plant.price}</p>
             </div>
             <div className="flex gap-3 items-center justify-between mt-1 w-full">
-              <button className="px-2 py-1 bg-[#163020] text-white text-sm font-semibold rounded-md">
+              <button
+                onClick={() => handleAddToCart(plant)}
+                className="px-2 py-1 bg-[#163020] text-white text-sm font-semibold rounded-md">
                 Add To Cart
               </button>
               <div className="text-2xl">{renderStars(plant.rating)}</div>
@@ -113,8 +172,8 @@ const Section4 = () => {
           </div>
         ))}
       </div>
-      <div className="flex w-full h-[10vh] mt-10 mb-10 items-center justify-center">
-        <button className="flex h-[70%] items-center justify-center text-xl px-6 py-2 bg-[#163020] text-white rounded-md gap-1"> <Link to='/navbar/allplant'>Explore more </Link> <FaAngleRight className="mt-1"/> </button>
+      <div className="flex w-full h-[10vh] mt-10 mb-3 items-center justify-center">
+        <button className="flex h-[70%] items-center justify-center text-xl px-6 py-2 bg-[#163020] text-white rounded-md gap-1"> <Link to='/navbar/allplant'>Explore more </Link> <FaAngleRight className="mt-1" /> </button>
       </div>
     </div>
   );
