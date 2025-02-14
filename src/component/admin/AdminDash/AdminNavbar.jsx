@@ -10,8 +10,8 @@ const AdminNavbar = () => {
     let navigate =  useNavigate();
     const handleLogout = () => {
         setIsLoggedIn(false);
-        setUserDetails({login email: "", password: "" });
-        navigate('/');  // Redirect to login page
+        setUserDetails({ email: "", password: "" });
+        navigate('/login');  // Redirect to login page
     };
     return (
         <div>
